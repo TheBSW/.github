@@ -1,0 +1,10 @@
+- name: Update README
+  run: |
+    curl -o champs.json https://thebsw.github.io/champs.json
+    champions=$(cat champs.json | jq -r 'to_entries | map("* \(.key): \(.value)") | join("\n")')
+    sed -i -e "/^### World Champion:/,/^## How to Update the Champions:/c### World Champion\n\n$champions\n## How to Update the Champions:" README.md
+    git add README.md
+    git commit -m "Update README with current champions" || true
+    git push
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
