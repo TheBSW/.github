@@ -1,0 +1,36 @@
+name: Update Profile README
+
+on:
+  workflow_run:
+    workflows: ["Update README Data"]
+    types:
+      - completed
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install jq
+        shell: bash
+
+      - name: Curl for GitHub Actions
+        uses: sozo-design/curl@v1.0.2
+        with:
+          args: '-s -o champs.json https://thebsw.github.io/champs.json'
+
+      - name: Update Profile README
+        run: |
+          champs=$(cat champs.json | jq -r 'to_entries | map("* \(.key): \(.value)") | join("\n")')
+          sed -i -e "/^<!-- CHAMPIONS_START -->/,/^<!-- CHAMPIONS_END -->/c<!-- CHAMPIONS_START -->\n$champs\n<!-- CHAMPIONS_END -->" /profile/README.md
+          git add /profile/README.md
+          git commit -m "Update profile README with current champions" || true
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
