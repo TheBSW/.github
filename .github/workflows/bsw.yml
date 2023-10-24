@@ -1,0 +1,33 @@
+name: update BSW Champs
+
+on:
+  schedule:
+    - cron: "*/3 * * * *"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install jq
+        shell: bash
+
+      - name: Curl for GitHub Actions
+        uses: sozo-design/curl@v1.0.2
+        with:
+          args: '-s -o champs.json https://thebsw.github.io/champs.json'
+
+      - name: Update champs.json
+        run: |
+          # Use jq to process the JSON data if needed
+          # Example: jq . key=value champs.json
+          git add champs.json
+          git commit -m "Update champs.json" || true
+          git push
+        shell: bash
