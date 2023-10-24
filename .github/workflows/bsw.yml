@@ -23,7 +23,7 @@ jobs:
       - name: Curl for GitHub Actions
         uses: sozo-design/curl@v1.0.2
         with:
-          args: '-s -o champs.json https://thebsw.github.io/champs.json'
+          args: "-s -o champs.json ${{ secrets.BSW_CHAMPS }}"
 
       - name: Update BSW README
         run: |
