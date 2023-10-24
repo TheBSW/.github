@@ -1,8 +1,10 @@
-name: Update README Data
+name: Update BSW README
 
 on:
-  schedule:
-    - cron: "*/3 * * * *"
+  workflow_run:
+    workflows: ["Update README Data"]
+    types:
+      - completed
 
 jobs:
   build:
@@ -23,19 +25,12 @@ jobs:
         with:
           args: '-s -o champs.json https://thebsw.github.io/champs.json'
 
-      - name: Process JSON Data with jq
-        uses: sergeysova/jq-action@v2
-        with:
-          script: 'to_entries | map("* \(.key): \(.value)") | join("\n")'
-        id: processed_data
-
-      - name: Update champs.json
+      - name: Update BSW README
         run: |
-          echo "${{ steps.processed_data.outputs.output }}" > champs.json
-          git add champs.json
-          git commit -m "Update champs.json" || true
+          champs=$(cat champs.json | jq -r 'to_entries | map("* \(.key): \(.value)") | join("\n")')
+          sed -i -e "/^<!-- CHAMPIONS_START -->/,/^<!-- CHAMPIONS_END -->/c<!-- CHAMPIONS_START -->\n$champs\n<!-- CHAMPIONS_END -->" /profile/README.md
+          git add /profile/README.md
+          git commit -m "Update profile README with current champions" || true
           git push
-        shell: bash
-
-      - name: Upgrade GitHub CLI
-        uses: philip-gai/upgrade-gh-cli@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
