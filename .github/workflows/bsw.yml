@@ -1,4 +1,4 @@
-name: update BSW Champs
+name: Update README Data
 
 on:
   schedule:
@@ -23,11 +23,19 @@ jobs:
         with:
           args: '-s -o champs.json https://thebsw.github.io/champs.json'
 
+      - name: Process JSON Data with jq
+        uses: sergeysova/jq-action@v2
+        with:
+          script: 'to_entries | map("* \(.key): \(.value)") | join("\n")'
+        id: processed_data
+
       - name: Update champs.json
         run: |
-          # Use jq to process the JSON data if needed
-          # Example: jq . key=value champs.json
+          echo "${{ steps.processed_data.outputs.output }}" > champs.json
           git add champs.json
           git commit -m "Update champs.json" || true
           git push
         shell: bash
+
+      - name: Upgrade GitHub CLI
+        uses: philip-gai/upgrade-gh-cli@v1
